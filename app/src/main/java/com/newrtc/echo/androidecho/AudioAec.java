@@ -70,7 +70,7 @@ public class AudioAec
 
 		if(isDeviceSupport())
 		{
-			if(initAEC(mRecorder.GetSessionId()))
+			if(initAEC(mRecorder.getSessionId()))
 			{
 				setAECEnabled(true);
 			}
@@ -131,7 +131,7 @@ public class AudioAec
 			return 0;
 		}
 
-		public int GetSessionId()
+		public int getSessionId()
 		{
 			return mAudioRecord.getAudioSessionId();
 		}
@@ -184,7 +184,7 @@ public class AudioAec
 
 			if (chkNewDev() && mRecorder != null)
 			{
-				mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRateInHz, channelConfig, audioFormat, bufferSizeInBytes, AudioTrack.MODE_STREAM, mRecorder.GetSessionId());
+				mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRateInHz, channelConfig, audioFormat, bufferSizeInBytes, AudioTrack.MODE_STREAM, mRecorder.getSessionId());
 			}
 			else
 			{
