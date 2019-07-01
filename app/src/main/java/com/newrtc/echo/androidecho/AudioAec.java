@@ -8,18 +8,18 @@ import android.media.MediaRecorder;
 import android.media.audiofx.AcousticEchoCanceler;
 import android.util.Log;
 
-public class AudioAec 
+public class AudioAec
 {
-	private AcousticEchoCanceler m_canceler = null;
-	private Recorder m_recorder = null;
-	private player   m_player = null; 
-	 
+	private AcousticEchoCanceler mCanceler = null;
+	private Recorder mRecorder = null;
+	private Player mPlayer = null;
+
 
     public static boolean chkNewDev()
     {
           return android.os.Build.VERSION.SDK_INT >= 16;
     }
-    
+
 	public static boolean isDeviceSupport()
 	{
         return AcousticEchoCanceler.isAvailable();
@@ -27,183 +27,183 @@ public class AudioAec
 
 	public boolean initAEC(int audioSession)
 	{
-		if (m_canceler != null)
+		if (mCanceler != null)
 		{
 			return false;
 		}
-		m_canceler = AcousticEchoCanceler.create(audioSession);
-		m_canceler.setEnabled(true);
-		return m_canceler.getEnabled();
+		mCanceler = AcousticEchoCanceler.create(audioSession);
+		mCanceler.setEnabled(true);
+		return mCanceler.getEnabled();
 	}
-	
+
 	public boolean setAECEnabled(boolean enable)
 	{
-		if (null == m_canceler)
+		if (null == mCanceler)
 		{
 			return false;
 		}
-		m_canceler.setEnabled(enable);
-		return m_canceler.getEnabled();
+		mCanceler.setEnabled(enable);
+		return mCanceler.getEnabled();
 	}
-	
+
 	public boolean release()
 	{
-	    if (null == m_canceler)
+	    if (null == mCanceler)
 	    {
 	        return false;
 	    }
-	    m_canceler.setEnabled(false);
-	    m_canceler.release();
+	    mCanceler.setEnabled(false);
+	    mCanceler.release();
 	    return true;
 	}
-	
-	public int StartRecorderAndPlayer()
+
+	public int startRecorderAndPlayer()
 	{
 		int iRet = 0;
-		m_recorder = new Recorder();
-		
-		iRet = m_recorder.InitAudioRecord();
+		mRecorder = new Recorder();
+
+		iRet = mRecorder.initAudioRecord();
 		if(iRet < 0)
 		{
 			return -1;
 		}
-		
+
 		if(isDeviceSupport())
 		{
-			if(initAEC(m_recorder.GetSessionId()))
+			if(initAEC(mRecorder.GetSessionId()))
 			{
 				setAECEnabled(true);
 			}
 		}
-		
-		m_player = new player();
+
+		mPlayer = new Player();
 		if(iRet < 0)
 		{
 			return -1;
 		}
-		iRet = m_player.InitAudioTrack();
+		iRet = mPlayer.initAudioTrack();
 		if(iRet < 0)
 		{
 			return -1;
 		}
-		
-		m_player.StartAudioTrack(); //start player
-		m_recorder.StartAudioRecord(); //start recorder
-		
+
+		mPlayer.startAudioTrack(); //start player
+		mRecorder.startAudioRecord(); //start recorder
+
 
 		return 0;
 	}
-	
-	public int StopRecorderAndPlayer()
+
+	public int stopRecorderAndPlayer()
 	{
 		return 0;
 	}
-	
-	
-	
-	
-	class Recorder 
+
+
+
+
+	class Recorder
 	{
-		AudioRecord m_audioRecord = null;
-		Thread m_audioWorker = null;
-		int m_sampleRateInHz = 48000;  
-		int m_channelConfig  =  AudioFormat.CHANNEL_IN_STEREO;   
-		int m_audioFormat    = AudioFormat.ENCODING_PCM_16BIT; 
-		int m_bitRate = 64000;
-		int m_bufferSizeInBytes = 0;
-		
+		AudioRecord mAudioRecord = null;
+		Thread mAudioWorker = null;
+		int mSampleRateInHz = 48000;
+		int mChannelConfig =  AudioFormat.CHANNEL_IN_STEREO;
+		int mAudioFormat = AudioFormat.ENCODING_PCM_16BIT;
+		int mBitRate = 64000;
+		int mBufferSizeInBytes = 0;
+
 		short audioData[] = null;
-		
-		int InitAudioRecord()
+
+		int initAudioRecord()
 		{
-			m_bufferSizeInBytes = AudioRecord.getMinBufferSize(m_sampleRateInHz,  m_channelConfig, m_audioFormat);  	
+			mBufferSizeInBytes = AudioRecord.getMinBufferSize(mSampleRateInHz, mChannelConfig, mAudioFormat);
 			if (chkNewDev())
 			{
-				m_audioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, m_sampleRateInHz, m_channelConfig, m_audioFormat, m_bufferSizeInBytes);
+				mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION, mSampleRateInHz, mChannelConfig, mAudioFormat, mBufferSizeInBytes);
 			}
 			else
 			{
-				m_audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, m_sampleRateInHz, m_channelConfig, m_audioFormat, m_bufferSizeInBytes);
+				mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, mSampleRateInHz, mChannelConfig, mAudioFormat, mBufferSizeInBytes);
 			}
-			
-			int packSize = Math.min(960, m_bufferSizeInBytes*2);
+
+			int packSize = Math.min(960, mBufferSizeInBytes *2);
 			audioData = new short[packSize];
 			return 0;
 		}
-		
+
 		public int GetSessionId()
 		{
-			return m_audioRecord.getAudioSessionId();
+			return mAudioRecord.getAudioSessionId();
 		}
-		
-		int StartAudioRecord()
+
+		int startAudioRecord()
 		{
-			Thread m_audioWorker = new Thread(new Runnable() 
+			Thread audioWorker = new Thread(new Runnable()
 			{
 	            @Override
-	            public void run() 
+	            public void run()
 	            {
-	            	ReadMic();
+	            	readMic();
 	            }
 	        });
-			m_audioWorker.start();
-			
+			audioWorker.start();
+
 			return 0;
 		}
-		
-		void ReadMic()
+
+		void readMic()
 		{
-			if(m_audioRecord == null)
+			if(mAudioRecord == null)
 			{
 				return ;
 			}
-	        m_audioRecord.startRecording();
-	        while (!Thread.interrupted()) 
-	        {  	
-	        	Log.d("TAG", "ReadMic");
-	            int size = m_audioRecord.read(audioData, 0, audioData.length);
-	            if (size <= 0) 
-	            {  
+	        mAudioRecord.startRecording();
+	        while (!Thread.interrupted())
+	        {
+	        	Log.d("TAG", "readMic");
+	            int size = mAudioRecord.read(audioData, 0, audioData.length);
+	            if (size <= 0)
+	            {
 	                break;
 	            }
-	            m_player.PlayAudio(audioData, audioData.length);
-	        }    
+	            mPlayer.playAudio(audioData, audioData.length);
+	        }
 		}
 	}
-	
-	class player
+
+	class Player
 	{
-		private AudioTrack m_audioTrack = null;
-		
-		int InitAudioTrack()
+		private AudioTrack mAudioTrack = null;
+
+		int initAudioTrack()
 		{
-			int m_sampleRateInHz = 48000;  
-			int m_channelConfig  =  AudioFormat.CHANNEL_IN_STEREO;   
-			int m_audioFormat    = AudioFormat.ENCODING_PCM_16BIT; 
-			int m_bufferSizeInBytes = 1024*4;
-			
-			if (chkNewDev() && m_recorder != null)
+			int sampleRateInHz = 48000;
+			int channelConfig  =  AudioFormat.CHANNEL_IN_STEREO;
+			int audioFormat    = AudioFormat.ENCODING_PCM_16BIT;
+			int bufferSizeInBytes = 1024*4;
+
+			if (chkNewDev() && mRecorder != null)
 			{
-				m_audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, m_sampleRateInHz, m_channelConfig, m_audioFormat, m_bufferSizeInBytes, AudioTrack.MODE_STREAM, m_recorder.GetSessionId());
+				mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRateInHz, channelConfig, audioFormat, bufferSizeInBytes, AudioTrack.MODE_STREAM, mRecorder.GetSessionId());
 			}
 			else
 			{
-				m_audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, m_sampleRateInHz, m_channelConfig, m_audioFormat, m_bufferSizeInBytes, AudioTrack.MODE_STREAM);
+				mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRateInHz, channelConfig, audioFormat, bufferSizeInBytes, AudioTrack.MODE_STREAM);
 			}
 			return 0;
 		}
-		
-		int StartAudioTrack()
+
+		int startAudioTrack()
 		{
-			m_audioTrack.play();
+			mAudioTrack.play();
 			return 0;
 		}
-		
-		public int PlayAudio(short[] audioData, int sizeInShort)
+
+		public int playAudio(short[] audioData, int sizeInShort)
 		{
-			m_audioTrack.write(audioData, 0, sizeInShort);
+			mAudioTrack.write(audioData, 0, sizeInShort);
 			return 0;
 		}
 	}
-	
+
 }

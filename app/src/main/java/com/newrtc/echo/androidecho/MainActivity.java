@@ -13,7 +13,7 @@ import android.view.WindowManager;
 
 public class MainActivity extends Activity {
 
-    AudioAec m_audio = null;
+    AudioAec mAudio = null;
 
     private static final int MY_PERMISSIONS_REQUEST = 1;
     private static final String[] MANDATORY_PERMISSIONS = {
@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
         }
 
 
-        m_audio = new AudioAec();
-        m_audio.StartRecorderAndPlayer();
+        mAudio = new AudioAec();
+        mAudio.startRecorderAndPlayer();
     }
 }
